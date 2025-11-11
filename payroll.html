@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payroll System - Ernest Escuadra</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        font-family: 'Lato', sans-serif;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        background: #fff;
+        padding: 25px 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 25px;
+    }
+
+    .form-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+        justify-content: space-between;
+    }
+
+    .form-grid label {
+        flex: 1 1 100%;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #555;
+    }
+
+    .form-grid input {
+        flex: 1 1 45%;
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+
+    .button-row {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .button-row button {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        color: white;
+        transition: background-color 0.2s;
+    }
+
+    .btn-add { background-color: #28a745; }
+    .btn-add:hover { background-color: #218838; }
+    .btn-del { background-color: #dc3545; }
+    .btn-del:hover { background-color: #b02a37; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    th {
+        background-color: #0078d7;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f7f7f7;
+    }
+
+    .totals {
+        font-weight: bold;
+        color: #d9534f;
+    }
+
+    .back-btn {
+        display: block;
+        width: fit-content;
+        margin: 0 auto;
+        text-decoration: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        background-color: #0078d7;
+        color: white;
+        text-align: center;
+    }
+
+    .back-btn:hover {
+        background-color: #005fa3;
+    }
+
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Payroll System</h1>
+
+    <div class="form-grid">
+        <label for="name">Employee Name:</label>
+        <input type="text" id="name" placeholder="New Employee">
+        
+        <label for="days">Days Worked:</label>
+        <input type="number" id="days" placeholder="0">
+        
+        <label for="rate">Daily Rate:</label>
+        <input type="number" id="rate" placeholder="0.00">
+        
+        <label for="deduction">Deduction:</label>
+        <input type="number" id="deduction" placeholder="0.00">
+    </div>
+
+    <div class="button-row">
+        <button class="btn-add" onclick="addEmployee()">Add Employee</button>
+        <button class="btn-del" onclick="deleteEmployee()">Delete Employee</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Name</th>
+                <th>Days</th>
+                <th>Rate</th>
+                <th>Gross</th>
+                <th>Deduction</th>
+                <th>Net</th>
+            </tr>
+        </thead>
+        <tbody id="payroll-body"></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4">Totals</td>
+                <td id="total-gross" class="totals">0.00</td>
+                <td id="total-deduction" class="totals">0.00</td>
+                <td id="total-net" class="totals">0.00</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <a href="MainWebsite.html" class="back-btn">← Back to Main Menu</a>
+</div>
+
+<script>
+let payrollList = [];
+
+function getNumberValue(id) {
+    const val = parseFloat(document.getElementById(id).value);
+    return isNaN(val) ? 0 : val;
+}
+
+function updateTotals() {
+    const tbody = document.getElementById('payroll-body');
+    let totalGross = 0, totalDeduction = 0, totalNet = 0;
+    for (let i = 0; i < tbody.rows.length; i++) {
+        const cells = tbody.rows[i].cells;
+        totalGross += parseFloat(cells[4].textContent);
+        totalDeduction += parseFloat(cells[5].textContent);
+        totalNet += parseFloat(cells[6].textContent);
+        cells[0].textContent = i + 1; // renumber
+    }
+    document.getElementById('total-gross').textContent = totalGross.toFixed(2);
+    document.getElementById('total-deduction').textContent = totalDeduction.toFixed(2);
+    document.getElementById('total-net').textContent = totalNet.toFixed(2);
+}
+
+function addEmployee() {
+    const name = document.getElementById('name').value.trim();
+    const days = getNumberValue('days');
+    const rate = getNumberValue('rate');
+    const deduction = getNumberValue('deduction');
+
+    if (!name || days <= 0 || rate <= 0) {
+        alert("Please fill in valid employee data.");
+        return;
+    }
+
+    const gross = days * rate;
+    const net = gross - deduction;
+
+    const tbody = document.getElementById('payroll-body');
+    const newRow = tbody.insertRow();
+    const values = [tbody.rows.length, name, days, rate.toFixed(2), gross.toFixed(2), deduction.toFixed(2), net.toFixed(2)];
+
+    for (let i = 0; i < values.length; i++) {
+        const cell = newRow.insertCell(i);
+        cell.textContent = values[i];
+        if (i !== 1) cell.style.textAlign = 'right';
+    }
+
+    updateTotals();
+    clearInputs();
+}
+
+function deleteEmployee() {
+    const line = parseInt(prompt("Enter employee No. to delete:"), 10) - 1;
+    const tbody = document.getElementById('payroll-body');
+    if (!isNaN(line) && line >= 0 && line < tbody.rows.length) {
+        tbody.deleteRow(line);
+        updateTotals();
+    } else {
+        alert("Invalid employee number.");
+    }
+}
+
+function clearInputs() {
+    document.getElementById('name').value = '';
+    document.getElementById('days').value = '';
+    document.getElementById('rate').value = '';
+    document.getElementById('deduction').value = '';
+}
+
+</script>
+</body>
+</html>
